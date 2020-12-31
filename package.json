@@ -19,13 +19,13 @@
     "WebAssembly"
   ],
   "license": "MIT",
-  "main": "dist-unminified/recorder.min.js",
+  "main": "dist/recorder.min.js",
   "files": [
-    "dist-unminified/"
+    "dist/"
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/gaxge/opus-recorder.git"
+    "url": "git://github.com/chris-rudmin/opus-recorder.git"
   },
   "bugs": {
     "url": "https://github.com/chris-rudmin/opus-recorder/issues",
