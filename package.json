@@ -19,9 +19,9 @@
     "WebAssembly"
   ],
   "license": "MIT",
-  "main": "dist-unminified/recorder.min.js",
+  "main": "dist/recorder.min.js",
   "files": [
-    "dist-unminified/"
+    "dist/"
   ],
   "repository": {
     "type": "git",
