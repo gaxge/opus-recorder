@@ -32,47 +32,28 @@
   <h2>Commands</h2>
   <input type="file" id="fileInput"/>
   <button type="button" id="remoteButton">Load using XMLHttpRequest</button>
+  <button type="button" id="convertButton">Convert processed</button>
 
   <h2>Recordings</h2>
   <ul id="recordingslist"></ul>
 
+  <h2>Processed</h2>
+  <ul id="processedlist"></ul>
+
   <script>
-    function decodeOgg(arrayBuffer){
+    const data = []
+    var decoderWorker = new Worker('../dist/decoderWorker.min.js');
+    var wavWorker = new Worker('../dist/waveWorker.min.js');
+    
+    function convert() {
 
-      var typedArray = new Uint8Array(arrayBuffer);
-      var decoderWorker = new Worker('../dist/decoderWorker.min.js');
-      var wavWorker = new Worker('../dist/waveWorker.min.js');
       var desiredSampleRate = parseInt(sampleRate.value,10);
-
-      decoderWorker.postMessage({ 
-        command:'init',
-        decoderSampleRate: desiredSampleRate,
-        outputBufferSampleRate: desiredSampleRate
-      });
 
       wavWorker.postMessage({ 
         command:'init',
         wavBitDepth: parseInt(bitDepth.value,10),
         wavSampleRate: desiredSampleRate
       });
-
-      decoderWorker.onmessage = function(e){
-
-        // null means decoder is finished
-        if (e.data === null) {
-          wavWorker.postMessage({ command: 'done' });
-        }
-
-        // e.data contains decoded buffers as float32 values
-        else {
-          wavWorker.postMessage({
-            command: 'encode',
-            buffers: e.data
-          }, e.data.map(function(typedArray){
-            return typedArray.buffer;
-          }));
-        }
-      };
 
       wavWorker.onmessage = function(e){
 
@@ -95,6 +76,54 @@
           li.appendChild(audio);
 
           recordingslist.appendChild(li);
+        }
+      };
+
+      for (const d of data)
+      {
+        wavWorker.postMessage({
+          command: 'encode',
+          buffers: d
+        }, d.map(function(typedArray){
+          return typedArray.buffer;
+        }));
+      }
+      
+
+      wavWorker.postMessage({ command: 'done' });
+    }
+    function decodeOgg(arrayBuffer){
+
+      var typedArray = new Uint8Array(arrayBuffer);
+      var desiredSampleRate = parseInt(sampleRate.value,10);
+
+      decoderWorker.postMessage({ 
+        command:'init',
+        decoderSampleRate: desiredSampleRate,
+        outputBufferSampleRate: desiredSampleRate
+      });
+
+      decoderWorker.onmessage = function(e){
+
+        // null means decoder is finished
+        if (e.data === null) {
+          // wavWorker.postMessage({ command: 'done' });
+          var li = document.createElement('li');
+          li.textContent = `Processed file`
+          processedlist.appendChild(li);
+
+          console.log(data)
+        }
+
+        // e.data contains decoded buffers as float32 values
+        else {
+          data.push(e.data)
+          // wavWorker.postMessage({
+          //   command: 'encode',
+          //   buffers: e.data
+          // }, e.data.map(function(typedArray){
+          //   return typedArray.buffer;
+          // }));
         }
       };
 
@@ -125,6 +154,10 @@
 
       xhr.send();
     };
+
+    convertButton.onclick = () => {
+      convert()
+    }
 
   </script>
 </body>
